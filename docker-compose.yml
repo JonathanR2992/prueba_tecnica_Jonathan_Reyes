@@ -1,0 +1,39 @@
+services:
+  api:
+    build: .
+    container_name: rag_bank_api
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./chroma_data:/app/chroma_data
+    depends_on:
+      - ollama
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  ui:
+    build: .
+    container_name: rag_bank_ui
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./chroma_data:/app/chroma_data
+    depends_on:
+      - api
+    command: streamlit run ui/streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag_bank_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
