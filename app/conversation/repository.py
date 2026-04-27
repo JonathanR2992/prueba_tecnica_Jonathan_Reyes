@@ -7,7 +7,7 @@ from app.config import settings
 
 class ConversationRepository:
     def __init__(self, db_path: str | None = None):
-        self.db_path = db_path or settings.sqlite_db_path
+        self.db_path = db_path or settings.sqlite_path
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 

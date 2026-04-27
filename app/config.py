@@ -1,35 +1,37 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "RAG Bank Assistant"
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    environment: str = "development"
 
     target_base_url: str = "https://www.bbva.com.co/"
-    max_pages: int = 30
-    request_timeout: int = 10
-    user_agent: str = "Mozilla/5.0 (compatible; RAGBankAssistant/1.0)"
+    user_agent: str = "Mozilla/5.0"
+    max_pages: int = 20
+    request_timeout: int = 15
 
-    chunk_size: int = 900
-    chunk_overlap: int = 150
-    top_k: int = 5
-    use_reranker: bool = True
-    conversation_window_n: int = 6
+    raw_data_path: str = "data/raw"
+    clean_data_path: str = "data/clean"
+    chroma_path: str = "data/chroma"
+    sqlite_path: str = "data/conversations.db"
 
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    collection_name: str = "bank_documents"
+
+    chunk_size: int = 500
+    chunk_overlap: int = 100
+    top_k: int = 5
+    memory_window: int = 5
+    use_reranker: bool = False
+
     llm_provider: str = "ollama"
     ollama_base_url: str = "http://ollama:11434"
-    ollama_model: str = "llama3.2:3b"
+    ollama_model: str = "llama3"
 
-    raw_data_dir: str = "data/raw"
-    clean_data_dir: str = "data/clean"
-    chroma_dir: str = "chroma_data"
-    sqlite_db_path: str = "data/conversations.db"
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
 
 
 settings = Settings()

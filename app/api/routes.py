@@ -29,19 +29,20 @@ def ingest():
         raw_path = scraper.save_raw(pages)
 
         cleaner = TextCleaner()
-        documents = cleaner.clean_file(raw_path)
-        clean_path = cleaner.save_clean(documents)
+        clean_path, clean_count = cleaner.clean()
 
         vector_store = ChromaVectorStore()
         indexed_chunks = vector_store.index_clean_documents(clean_path)
 
         return {
+            "message": "Ingesta completada correctamente",
             "scraped_pages": len(pages),
-            "clean_documents": len(documents),
+            "clean_documents": clean_count,
             "indexed_chunks": indexed_chunks,
             "raw_path": raw_path,
             "clean_path": clean_path,
         }
+
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -50,6 +51,7 @@ def ingest():
 def ask(request: AskRequest):
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="La pregunta no puede estar vacía.")
+
     return rag_service.ask(request.conversation_id, request.question)
 
 

@@ -7,7 +7,7 @@ class ConversationMemory:
         self.repository = ConversationRepository()
 
     def load(self, conversation_id: str) -> list[dict]:
-        return self.repository.get_recent_history(conversation_id, settings.conversation_window_n)
+        return self.repository.get_recent_history(conversation_id, settings.memory_window)
 
     def save(self, conversation_id: str, question: str, answer: str) -> None:
         self.repository.save_message(conversation_id, question, answer)

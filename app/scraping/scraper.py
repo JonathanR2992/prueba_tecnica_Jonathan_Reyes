@@ -80,8 +80,17 @@ class BankWebsiteScraper:
         return pages
 
     def save_raw(self, pages: list[ScrapedPage]) -> str:
-        os.makedirs(settings.raw_data_dir, exist_ok=True)
-        output_path = os.path.join(settings.raw_data_dir, "scraped_pages.json")
+        os.makedirs(settings.raw_data_path, exist_ok=True)
+        output_path = os.path.join(settings.raw_data_path, "scraped_pages.json")
         with open(output_path, "w", encoding="utf-8") as file:
             json.dump([page.__dict__ for page in pages], file, ensure_ascii=False, indent=2)
         return output_path
+
+
+if __name__ == "__main__":
+    scraper = BankWebsiteScraper()
+    pages = scraper.scrape()
+    output_path = scraper.save_raw(pages)
+
+    print(f"Páginas scrapeadas: {len(pages)}")
+    print(f"Archivo guardado en: {output_path}")
