@@ -1,22 +1,48 @@
 # RAG Bank Assistant
 
-Sistema RAG con web scraping para consultar información publicada en un sitio web bancario institucional.
+Asistente conversacional basado en Retrieval-Augmented Generation (RAG) que permite responder preguntas utilizando información extraída dinámicamente desde el sitio web institucional del banco.
 
 ## 1. Objetivo
 
-El proyecto implementa un asistente conversacional que:
+Este sistema implementa un pipeline completo de RAG que incluye:
 
-1. Extrae contenido del sitio web configurado.
-2. Guarda datos crudos y limpios en local.
-3. Divide, vectoriza e indexa el contenido en ChromaDB.
-4. Expone una API conversacional con FastAPI.
-5. Expone una UI minimalista con Streamlit.
-6. Mantiene historial conversacional persistente por `conversation_id`.
-7. Usa los últimos `N` mensajes como memoria conversacional configurable.
-8. Incluye métricas básicas sobre el histórico de conversaciones.
-9. Implementa tres patrones de diseño: Factory Method, Strategy y Facade.
+1. Scraping web automatizado
+2. Limpieza y procesamiento de texto
+3. Generación de embeddings
+4. Almacenamiento vectorial con ChromaDB
+5. Recuperación semántica de información
+6. Generación de respuestas usando LLM local (Ollama)
 
-## 2. Stack tecnológico
+El objetivo es construir un asistente confiable que responda únicamente con información verificada del sitio institucional, evitando alucinaciones del modelo.
+
+## 2. Arquitectura del sistema
+
+[Usuario] 
+    ↓ 
+[Streamlit UI] 
+    ↓ 
+[FastAPI Backend] 
+    ↓ 
+[RAG Service (Facade)] 
+    ↓ 
+[Retrieval Strategy] 
+    ↓ 
+[ChromaDB Vector Store] 
+    ↓ 
+[Ollama LLM] 
+    ↓ 
+[Respuesta + Fuentes]
+
+## 3. Stack tecnológico
+
+    - Python 3.11
+    - FastAPI
+    - Streamlit
+    - ChromaDB
+    - SentenceTransformers
+    - Ollama (LLM local)
+    - Docker & Docker Compose
+    - BeautifulSoup (scraping)
 
 | Componente | Tecnología | Justificación |
 |---|---|---|
@@ -30,44 +56,115 @@ El proyecto implementa un asistente conversacional que:
 | Historial | SQLite | Persistencia local simple, portable y suficiente para la prueba. |
 | Docker | Docker + Compose | Permite levantar API, UI y Ollama con un solo comando. |
 
-## 3. Requisitos previos
+## 4. Requisitos previos
 
 - Docker instalado.
 - Docker Compose instalado.
 - Git instalado.
 - Al menos 6 GB de RAM disponibles si se usa Ollama con modelo local.
 
-## 4. Configuración inicial
+## 5. Estructura del proyecto
+
+app/ 
+├── api/ # Endpoints (FastAPI) 
+├── scraping/ # Scraper y limpieza 
+├── rag/ # Embeddings, chunking, vector store 
+├── patterns/ # Facade, Strategy, Factory 
+├── conversation/ # Memoria conversacional 
+├── analytics/ # Métricas 
+└── config.py # Configuración central 
+
+streamlit_app.py # Frontend 
+docker-compose.yml # Orquestación 
+.env # Configuración
+
+## 6. Flujo de funcionamiento
+
+  1. Ingesta de datos (ETL)
+
+  El sistema ejecuta automáticamente:
+
+  Scraping → Cleaning → Chunking → Embeddings → Indexación
+
+  Esto se activa desde la UI con:
+
+  "Ejecutar raspado + indexación"
+
+  2. Consulta RAG
+
+  Cuando el usuario realiza una pregunta:
+
+  Se recupera contexto relevante desde ChromaDB
+  Se construye un prompt con:
+  Contexto
+  Historial conversacional
+  Se consulta el LLM local (Ollama)
+  Se retorna:
+  Respuesta generada
+  Fuentes utilizadas
+
+## 7. Configuración inicial
 
 Clonar el repositorio:
 
 ```bash
 git clone https://github.com/JonathanR2992/prueba_tecnica_Jonathan_Reyes.git
-cd rag-bbva-assistant
+cd prueba_tecnica_Jonathan_Reyes
 ```
 
 Crear el archivo `.env`:
 
 ```bash
-cp .env.example .env
+cp .env .env
 ```
 
-Variables principales:
+ -- NOTA --
+  El archivo .env debe estar de la siguiente manera:
+  # =========================
+  # App
+  # =========================
+  APP_NAME=RAG Bank Assistant
+  API_HOST=0.0.0.0
+  API_PORT=8000
+  ANONYMIZED_TELEMETRY=False
+  CHROMA_TELEMETRY=False
 
-```env
-TARGET_BASE_URL=https://www.bbva.com.co/
-MAX_PAGES=30
-CHUNK_SIZE=900
-CHUNK_OVERLAP=150
-TOP_K=5
-USE_RERANKER=true
-CONVERSATION_WINDOW_N=6
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-LLM_PROVIDER=ollama
-OLLAMA_MODEL=llama3.2:3b
-```
+  # =========================
+  # Scraping
+  # =========================
+  TARGET_BASE_URL=https://www.bbva.com.co/
+  MAX_PAGES=30
+  REQUEST_TIMEOUT=10
+  USER_AGENT=Mozilla/5.0 (compatible; RAGBankAssistant/1.0)
 
-## 5. Levantar el proyecto
+  # =========================
+  # RAG (Optimizado para phi)
+  # =========================
+  CHUNK_SIZE=500
+  CHUNK_OVERLAP=100
+  TOP_K=3
+  USE_RERANKER=False
+  CONVERSATION_WINDOW_N=3
+
+  # =========================
+  # Models
+  # =========================
+  EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+  LLM_PROVIDER=ollama
+  OLLAMA_BASE_URL=http://ollama:11434
+  OLLAMA_MODEL=phi
+
+  # =========================
+  # Storage (CONSISTENTE CON EL CÓDIGO)
+  # =========================
+  RAW_DATA_PATH=data/raw
+  CLEAN_DATA_PATH=data/clean
+  CHROMA_PATH=data/chroma
+  SQLITE_PATH=data/conversations.db
+
+-- / --
+
+## 8. Levantar el proyecto
 
 ```bash
 docker compose up --build
@@ -85,65 +182,57 @@ La interfaz Streamlit quedará disponible en:
 http://localhost:8501
 ```
 
-## 6. Descargar el modelo de Ollama
-
-En otra terminal, después de levantar los servicios:
+## 9. Descargar el modelo de Ollama
 
 ```bash
-chmod +x scripts/pull_ollama_model.sh
-./scripts/pull_ollama_model.sh
+docker exec -it rag_bank_ollama ollama pull phi
 ```
 
-También puede ejecutarse manualmente:
+## 10. Uso del sistema
 
-```bash
-docker exec -it rag_bank_ollama ollama pull llama3.2:3b
-```
-
-## 7. Uso del sistema
-
-### Opción 1: usar la UI
+### Usar la UI
 
 1. Abrir `http://localhost:8501`.
-2. Presionar `Ejecutar scraping + indexación`.
+2. Presionar `Ejecutar raspado + indexación`.
 3. Esperar a que termine la ingesta.
 4. Escribir una pregunta en el chat.
+    Ejemplos:
+      ¿Qué puedo hacer con la App BBVA?
+      ¿Cómo abrir una cuenta de ahorros?
 5. Revisar la respuesta y las fuentes recuperadas.
 
-### Opción 2: usar la API
 
-Health check:
+## 11. Patrones de diseño implementados
 
-```bash
-curl http://localhost:8000/health
-```
+### 11.1 Uso de RAG
 
-Ejecutar scraping e indexación:
+Se evita que el modelo genere respuestas incorrectas utilizando únicamente contexto recuperado.
 
-```bash
-curl -X POST http://localhost:8000/ingest
-```
+### 11.2 Modelo LLM (phi)
 
-Preguntar al sistema:
+Se seleccionó un modelo liviano para:
 
-```bash
-curl -X POST http://localhost:8000/ask \
-  -H "Content-Type: application/json" \
-  -d '{
-    "conversation_id": "session_001",
-    "question": "¿Qué productos de ahorro ofrece el banco?"
-  }'
-```
+Reducir latencia
+Permitir ejecución en CPU
+Evitar timeouts en Docker
 
-Consultar métricas:
+### 11.3 ChromaDB
 
-```bash
-curl http://localhost:8000/analytics
-```
+Elegido por:
 
-## 8. Patrones de diseño implementados
+Persistencia local
+Simplicidad de integración
+Buen rendimiento en pruebas técnicas
 
-### 8.1 Factory Method
+### 11.4 Arquitectura con patrones
+
+Se implementaron:
+
+Factory → desacopla la creación de componentes
+Strategy → permite cambiar la estrategia de recuperación
+Facade → simplifica el uso del sistema RAG
+
+#### 11.4.1 Factory Method
 
 Archivo: `app/patterns/factory.py`
 
@@ -154,7 +243,7 @@ Se usa para centralizar la creación de componentes como:
 
 Justificación: permite cambiar implementaciones futuras, por ejemplo pasar de ChromaDB a Qdrant o de Ollama a una API externa, sin modificar todo el sistema.
 
-### 8.2 Strategy
+#### 11.4.2 Strategy
 
 Archivo: `app/patterns/strategy.py`
 
@@ -165,7 +254,7 @@ Se usa para intercambiar estrategias de recuperación:
 
 Justificación: permite activar o desactivar el reranker desde configuración sin cambiar la lógica principal del RAG.
 
-### 8.3 Facade
+#### 11.4.3 Facade
 
 Archivo: `app/patterns/facade.py`
 
@@ -182,7 +271,7 @@ Encapsula:
 
 Justificación: expone una interfaz simple `ask()` para que la API no conozca los detalles internos del pipeline RAG.
 
-## 9. Historial de conversación
+## 12. Historial de conversación
 
 El sistema guarda cada interacción en SQLite con:
 
@@ -199,7 +288,7 @@ CONVERSATION_WINDOW_N=6
 
 Esto permite que una misma sesión conserve contexto sin mezclar conversaciones distintas.
 
-## 10. Análisis de datos
+## 13. Análisis de datos
 
 Endpoint:
 
@@ -216,7 +305,7 @@ Métricas incluidas:
 
 Estas métricas permiten estimar uso, temas consultados e impacto potencial del asistente.
 
-## 11. Manejo de errores
+## 14. Manejo de errores
 
 El sistema incluye manejo básico de errores en:
 
@@ -225,7 +314,7 @@ El sistema incluye manejo básico de errores en:
 - Validación de pregunta vacía.
 - Fallback cuando Ollama no está disponible.
 
-## 12. Limitaciones conocidas
+## 15. Limitaciones conocidas
 
 - El scraping está diseñado para HTML estático. Si el sitio carga contenido con JavaScript, se podría requerir Playwright o Selenium.
 - El reranker implementado usa TF-IDF por simplicidad y costo cero. Una mejora sería usar CrossEncoder de SentenceTransformers.
@@ -233,7 +322,7 @@ El sistema incluye manejo básico de errores en:
 - No se implementó autenticación porque no fue solicitada para la prueba técnica.
 - El scraping debe respetar las políticas del sitio objetivo y su `robots.txt`.
 
-## 13. Futuras mejoras
+## 16. Futuras mejoras
 
 - Agregar Playwright para sitios con renderizado dinámico.
 - Implementar CrossEncoder reranker.
@@ -244,7 +333,7 @@ El sistema incluye manejo básico de errores en:
 - Agregar tests unitarios y de integración.
 - Agregar CI/CD con GitHub Actions.
 
-## 14. Decisiones de diseño
+## 17. Decisiones de diseño
 
 Ante ambigüedades del enunciado, se asumió lo siguiente:
 
@@ -252,3 +341,8 @@ Ante ambigüedades del enunciado, se asumió lo siguiente:
 - La persistencia local es válida usando SQLite y ChromaDB persistente.
 - El LLM puede ejecutarse localmente con Ollama para evitar costos.
 - La UI no busca ser visualmente sofisticada, sino funcional, limpia y evaluable.
+
+## Autor
+
+Jonathan Reyes
+Ingeniero Electrónico | Data Science & Machine Learning
