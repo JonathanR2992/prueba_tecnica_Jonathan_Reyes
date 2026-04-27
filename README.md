@@ -342,6 +342,23 @@ Ante ambigüedades del enunciado, se asumió lo siguiente:
 - El LLM puede ejecutarse localmente con Ollama para evitar costos.
 - La UI no busca ser visualmente sofisticada, sino funcional, limpia y evaluable.
 
+## 18. Uso de Inteligencia Artificial durante el desarrollo
+
+El desarrollo de esta prueba técnica contó con el apoyo de herramientas de Inteligencia Artificial generativa (como asistentes de código) para:
+
+- Acelerar la estructuración del proyecto.
+- Validar enfoques de arquitectura.
+- Generar ejemplos base de código.
+- Depurar errores durante la implementación.
+
+Sin embargo:
+
+- La arquitectura, integración de componentes y decisiones técnicas fueron definidas, ajustadas y validadas manualmente.
+- Se realizaron múltiples iteraciones de debugging, integración y pruebas para asegurar el correcto funcionamiento del sistema.
+- El resultado final refleja comprensión completa del pipeline RAG, su implementación y sus trade-offs.
+
+Este enfoque es consistente con prácticas modernas de desarrollo, donde la IA actúa como herramienta de apoyo, pero la responsabilidad técnica recae en el ingeniero.
+
 ## Autor
 
 Jonathan Reyes
